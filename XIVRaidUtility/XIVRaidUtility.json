@@ -1,0 +1,12 @@
+{
+  "Author": "Kyzn",
+  "Name": "XIVRaidUtility",
+  "Punchline": "Raid util in progress",
+  "Description": "Easier visibility to most used NA raid strategies",
+  "ApplicableVersion": "any",
+  "Tags": [
+    "raid",
+    "utility",
+    "plugin"
+  ]
+}

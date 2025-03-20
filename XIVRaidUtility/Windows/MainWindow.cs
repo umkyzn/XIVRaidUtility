@@ -1,4 +1,5 @@
 ﻿using System;
+using System.Collections.Generic;
 using System.Numerics;
 using Dalamud.Interface.Utility;
 using Dalamud.Interface.Utility.Raii;
@@ -6,17 +7,18 @@ using Dalamud.Interface.Windowing;
 using ImGuiNET;
 using Lumina.Excel.Sheets;
 
-namespace SamplePlugin.Windows;
+namespace XIVRaidUtility.Windows;
 
 public class MainWindow : Window, IDisposable
 {
-    private string GoatImagePath;
+    private IReadOnlyList<string> ImagePaths;
+    private int SelectedImageIndex = -1;
     private Plugin Plugin;
 
     // We give this window a hidden ID using ##
     // So that the user will see "My Amazing Window" as window title,
     // but for ImGui the ID is "My Amazing Window##With a hidden ID"
-    public MainWindow(Plugin plugin, string goatImagePath)
+    public MainWindow(Plugin plugin, IReadOnlyList<string> imagePaths)
         : base("My Amazing Window##With a hidden ID", ImGuiWindowFlags.NoScrollbar | ImGuiWindowFlags.NoScrollWithMouse)
     {
         SizeConstraints = new WindowSizeConstraints
@@ -25,7 +27,7 @@ public class MainWindow : Window, IDisposable
             MaximumSize = new Vector2(float.MaxValue, float.MaxValue)
         };
 
-        GoatImagePath = goatImagePath;
+        ImagePaths = imagePaths;
         Plugin = plugin;
     }
 
@@ -46,6 +48,8 @@ public class MainWindow : Window, IDisposable
 
         ImGui.Spacing();
 
+        DrawImageButtons(ImagePaths);
+        
         // Normally a BeginChild() would have to be followed by an unconditional EndChild(),
         // ImRaii takes care of this after the scope ends.
         // This works for all ImGui functions that require specific handling, examples are BeginTable() or Indent().
@@ -54,13 +58,13 @@ public class MainWindow : Window, IDisposable
             // Check if this child is drawing
             if (child.Success)
             {
-                ImGui.TextUnformatted("Have a goat:");
-                var goatImage = Plugin.TextureProvider.GetFromFile(GoatImagePath).GetWrapOrDefault();
-                if (goatImage != null)
+                var imagePath = ImagePaths[SelectedImageIndex];
+                var image = Plugin.TextureProvider.GetFromFile(imagePath).GetWrapOrDefault();
+                if (image != null)
                 {
                     using (ImRaii.PushIndent(55f))
                     {
-                        ImGui.Image(goatImage.ImGuiHandle, new Vector2(goatImage.Width, goatImage.Height));
+                        ImGui.Image(image.ImGuiHandle, new Vector2(image.Width, image.Height));
                     }
                 }
                 else
@@ -102,5 +106,22 @@ public class MainWindow : Window, IDisposable
                 }
             }
         }
+    }
+    
+    private void DrawImageButtons(IReadOnlyList<string> imagePaths)
+    {
+        if (imagePaths.Count == 0) return;
+
+        for (var i = 0; i < imagePaths.Count; i++)
+        {
+            var buttonLabel = $" {i + 1} ";
+
+            if (ImGui.Button(buttonLabel))
+            {
+                SelectedImageIndex = i;
+            }
+            ImGui.SameLine();
+        }
+        ImGui.NewLine();
     }
 }
